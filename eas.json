@@ -1,0 +1,18 @@
+{
+  "build": {
+    "production": {
+      "env": {
+        "APP_ENV": "production"
+      },
+      "releaseChannel": "production"
+    },
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "development"
+      },
+      "releaseChannel": "development"
+    }
+  }
+}
