@@ -7,18 +7,15 @@ import { useData  } from '../BLEContext';
 import useBLE from '../useBLE';
 import SpeedometerComponent from '../components/SpeedometerComponent';
 import { Ionicons } from '@expo/vector-icons';
+import { useSelector,useDispatch } from 'react-redux';
+import { setMaxStrength } from '../src/store/userSlice';
 
-const WelcomeScreen = ({userId}) => {
-  console.log(userId);
-  //const { data } = useData();
-  const API_URL = "192.168.2.100:5000/";
+const WelcomeScreen = () => {
+  const dispatch = useDispatch();
+  const API_URL = "192.168.2.117:5000/";
   const route = useRoute();
   const navigation = useNavigation();
   const isFocused = useIsFocused();
-  //console.log(route.params);
-  //const { userId } = route.params;
-  // const { userId } = "";
-  // console.log(userId);
   const [darkMode, setDarkMode] = useState(false);
   const [workoutHistory, setWorkoutHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,11 +28,16 @@ const WelcomeScreen = ({userId}) => {
   const [vMax, setVMax] = useState(null);
   const [displayMfData, setDisplayMfData] = useState([]);
   const [isVMaxSet, setIsVMaxSet] = useState(false);
+  const [averageStrength, setAverageStrength] = useState(0);
 
 
   const longPressTimerRef = useRef(null);
   const longPressActiveRef = useRef(null);
   const lastProcessedIndex = useRef(0);
+  const userId = useSelector((state) => state.user.userId);
+  const maxStrength = useSelector((state) => state.user.maxStrength);
+  console.log("Redux:",userId,maxStrength);
+  
 
   // useEffect(() => {
   //   const processNewData = () => {
@@ -90,16 +92,35 @@ const WelcomeScreen = ({userId}) => {
 
     updateSpeedWithDelay();
   }, [mfData, vMax]);
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await axios.get(`http://${API_URL}users/maxStrength/${userId}`);
+        const data = response.data;
+        console.log(data);
 
-  // useEffect(() => {
-  //   if (isFocused) {
-  //     fetchWorkoutHistory();
-  //   }
-  // }, [isFocused]);
-  
- 
+        if (Array.isArray(data)) {
+          // Calculate average strength
+          const totalStrength = data.reduce((sum, item) => sum + item.strength, 0);
+          const avgStrength = data.length > 0 ? totalStrength / data.length : 0;
 
+          // Set the average strength in local state
+          setAverageStrength(avgStrength);
 
+          // Dispatch the entire maxStrength array to Redux store
+          dispatch(setMaxStrength(data));
+
+          // Optional: You might want to sort the data by date before storing or using it
+          const sortedData = [...data].sort((a, b) => new Date(b.time) - new Date(a.time));
+          console.log('Sorted data:', sortedData);
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    fetchStats();
+  }, [userId, dispatch]);
 
 
   const startWorkout = () => {
@@ -156,7 +177,7 @@ const WelcomeScreen = ({userId}) => {
         </View>
         <View style={styles.metricBox}>
           <Text style={styles.metricLabel}>Avg</Text>
-          <Text style={styles.metricValue}>17 kg</Text>
+          <Text style={styles.metricValue}>{averageStrength.toFixed(2)}</Text>
         </View>
       </View>
       <View style={styles.buttons}>

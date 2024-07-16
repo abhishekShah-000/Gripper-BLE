@@ -5,7 +5,7 @@ import axios from 'axios';
 //import { API_URL } from '@env';
 
 const WorkoutScreen = ({ route }) => {
-  const API_URL = "192.168.2.112:5000/";
+  const API_URL = "192.168.2.117:5000/";
   const userId = route.params;
   const [workouts, setWorkouts] = useState([]);
   const [selectedOption, setSelectedOption] = useState(null);

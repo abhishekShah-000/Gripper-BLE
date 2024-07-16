@@ -8,7 +8,7 @@ import RepCounter from '../components/RepCounter'; // Adjust path if RepCounter 
 import CustomCircularProgress from '../components/CustomCircularProgress'
 
 const MainScreen = ({ route }) => {
-  const API_URL = "192.168.2.112:5000/";
+  const API_URL = "192.168.2.117:5000/";
   const { protocol, level, userId } = route.params;
   const navigation = useNavigation();
   const [activeHand, setActiveHand] = useState('left'); // Track active hand
@@ -262,6 +262,8 @@ const MainScreen = ({ route }) => {
           </View>
           <SpeedometerComponent
             value={speed}
+            minVal={minThresholdValue}
+            maxVal = {maxThresholdValue}
           />
          
        

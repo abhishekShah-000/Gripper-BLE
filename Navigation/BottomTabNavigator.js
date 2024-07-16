@@ -21,7 +21,7 @@ const defaultStackScreenOptions = {
 const HomeStack = ({ userId }) => (
     <Stack.Navigator screenOptions={defaultStackScreenOptions}>
       <Stack.Screen name="Welcome">
-        {() => <WelcomeScreen userId = {userId} />}
+        {() => <WelcomeScreen/>}
       </Stack.Screen>
   
     </Stack.Navigator>

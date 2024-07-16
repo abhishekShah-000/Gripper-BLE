@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Text, View, Image, StyleSheet, Animated } from 'react-native';
 import CircularProgress from 'react-native-circular-progress-indicator';
+import { max } from 'react-native-reanimated';
 
-const SpeedometerComponent = ({ value, imageStyle }) => {
-  const formattedValue =90;
+const SpeedometerComponent = ({ value, imageStyle, minVal, maxVal }) => {
+  console.log(minVal,maxVal);
+  const formattedValue =30;
   const [rotation] = useState(new Animated.Value(0));
   const [rotationValue, setRotationValue] = useState(0);
   const [inactiveStrokeColorValue, setInactiveStrokeColorValue] = useState(new Animated.Value(0));
@@ -12,6 +14,18 @@ const SpeedometerComponent = ({ value, imageStyle }) => {
     const normalizedValue = value / 100; // Normalize value to 0-1 range
     setInactiveStrokeColorValue(new Animated.Value(normalizedValue));
   }, [value]);
+  const getActiveStrokeColor = (value) => {
+    if (value <= minVal) {
+      return '#FF2A00'; //red
+    } else if (value >= minVal && value<maxVal) {
+      return '#019563'; // Green
+    } else if(minVal && maxVal){
+      return '#FFA722'; // YEllow
+    }
+    else{
+      return "#1BB3FF";
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -20,6 +34,7 @@ const SpeedometerComponent = ({ value, imageStyle }) => {
         value={formattedValue}
         textColor='#222'
         fontSize={20}
+        activeStrokeColor={getActiveStrokeColor(formattedValue)}
         inActiveStrokeColor="#1BB3FF"
         inActiveStrokeOpacity={0.2}
         inActiveStrokeWidth={20}

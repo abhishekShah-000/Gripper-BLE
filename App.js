@@ -5,6 +5,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { DataProvider } from './BLEContext';
+import { Provider } from 'react-redux';
+import { store } from './src/store/store';
 
 // Import your screens
 import LoginScreen from './screens/LoginScreen';
@@ -79,11 +81,13 @@ const AppNavigator = () => (
 
 const App = () => {
   return (
+    <Provider store={store}>
     <DataProvider>
       <NavigationContainer>
         <AppNavigator />
       </NavigationContainer>
     </DataProvider>
+    </Provider>
   );
 };
 

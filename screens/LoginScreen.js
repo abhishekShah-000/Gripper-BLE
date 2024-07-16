@@ -1,25 +1,34 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert, Image, TouchableOpacity, Dimensions, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import axios from 'axios';
+import { useSelector, useDispatch } from 'react-redux';
+import { setUserId, setMaxStrength } from '../src/store/userSlice';
+
 // import { API_URL } from '@env';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const LoginScreen = ({ navigation }) => {
-  const API_URL = "192.168.2.108:5000/";
+  const dispatch = useDispatch();
+  //const { userId, maxStrength } = useSelector((state) => state.user);
+
+  const API_URL = "192.168.2.117:5000/";
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
     try {
       console.log(`http://${API_URL}users/login`);
+      console.log("username:",username,password);
       const response = await axios.post(`http://${API_URL}users/login`, {
         username,
         password,
       });
-
+      console.log(response.data);
       if (response.data.token) {
         const userId = response.data.userId; // Assuming userId is returned in the response
-        console.log(userId);
+        //console.log(userId, response.data.maxStrength[0]);
+        dispatch(setUserId(userId));
+        //dispatch(setMaxStrength(response.data.maxStrength[0]));
         Alert.alert('Login Successful', 'Welcome to the app!', [
           {
             text: 'OK',
