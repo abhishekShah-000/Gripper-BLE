@@ -32,7 +32,7 @@ const LoginScreen = ({ navigation }) => {
         Alert.alert('Login Successful', 'Welcome to the app!', [
           {
             text: 'OK',
-            onPress: () => navigation.navigate("BottomTabs",{userId}),
+            onPress: () => navigation.navigate("BLEConnection"),
           },
         ]);
       }

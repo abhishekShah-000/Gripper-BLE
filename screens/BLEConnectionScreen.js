@@ -4,7 +4,7 @@ import useBLE from '../useBLE'; // Update with the correct path
 import { TouchableOpacity } from 'react-native-gesture-handler';
 
 const BleConnectionScreen = ({navigation,route}) => {
-  const userId = route.params;
+  //const userId = route.params;
   const {
     requestPermissions,
     scanForPeripherals,
@@ -60,7 +60,7 @@ const BleConnectionScreen = ({navigation,route}) => {
     <View style={styles.container}>
       <Text style={styles.header}>Connect your device</Text>
       <TouchableOpacity
-      onPress={() => navigation.navigate("Welcome",{userId})}>
+      onPress={() => navigation.navigate("BottomTabs")}>
         <Text>Skip </Text>
       </TouchableOpacity>
       <View style={styles.circleContainer}>
@@ -74,7 +74,7 @@ const BleConnectionScreen = ({navigation,route}) => {
       </Text>
       {status === 'connected' && (
         // <Button title="Let's start our fitness journey" onPress={() => navigation.navigate("Welcome",userId)} />
-        <Button title="Let's start our fitness journey" onPress={() => navigation.navigate("Welcome",{userId})} />
+        <Button title="Let's start our fitness journey" onPress={() => navigation.navigate("BottomTabs")} />
       )}
       {(status === 'searching' || status === 'connecting') && (
         <ActivityIndicator size="large" color="#00ff00" style={styles.loader} />
