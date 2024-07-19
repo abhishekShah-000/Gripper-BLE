@@ -1,15 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef  } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import SpeedometerComponent from '../components/SpeedometerComponent'; // Adjust path as per your file structure
 import axios from 'axios';
-import { useNavigation } from '@react-navigation/native';
-//import { API_URL } from '@env';
+import { useNavigation, useRoute} from '@react-navigation/native';
+import { API_URL } from '@env';
+import { useSelector,useDispatch } from 'react-redux';
 import RepCounter from '../components/RepCounter'; // Adjust path if RepCounter is in a separate file
 import CustomCircularProgress from '../components/CustomCircularProgress'
 
-const MainScreen = ({ route }) => {
-  const API_URL = "192.168.2.117:5000/";
-  const { protocol, level, userId } = route.params;
+const MainScreen = () => {
+  const route = useRoute();
+  const {protocol,level} = route.params;
+  const token = useSelector((state) => state.user.token);
+  const userId = useSelector((state) => state.user.userId);
   const navigation = useNavigation();
   const [activeHand, setActiveHand] = useState('left'); // Track active hand
 
@@ -48,7 +51,14 @@ const MainScreen = ({ route }) => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get(`http://${API_URL}ProtocolInfo/${protocol}/${level}`);
+        const response = await axios.get(`http://${API_URL}/ProtocolInfo/${protocol}/${level}`,
+          {
+            headers:
+          {
+            'Authorization': `Bearer ${token}`
+          }
+          }
+        );
         const data = response.data;
         const levelData = data.difficultyLevel[level];
 

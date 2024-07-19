@@ -1,34 +1,84 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, Image, TouchableOpacity, Dimensions, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import axios from 'axios';
-import uuid from 'react-native-uuid';  
+import { useDispatch } from 'react-redux';
+import { setUserId, setToken } from '../src/store/userSlice';
+import { API_URL } from '@env';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-
 const RegisterScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const userId = uuid.v4();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const checkUsernameAvailability = async () => {
+    if (!username || !password) {
+      Alert.alert('Error', 'Please enter both username and password');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await axios.post(`http://${API_URL}/users/check-username`, { username });
+      setIsLoading(false);
+
+      if (response.data.isAvailable) {
+        console.log("available");
+        handleRegister();
+      } else {
+        Alert.alert('Error', 'Username already exists. Please choose a different one.');
+      }
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error checking username:', error);
+      Alert.alert('Error', 'An error occurred while checking username availability. Please try again.');
+    }
+  };
+
+  const handleRegister = async () => {
+    
+    try {
+      const response = await axios.post(`http://${API_URL}/users/register`, {
+        username,
+        password,
+      });
+      
+      if (response.data.token) {
+        const userId = response.data.userId;
+        const token = response.data.token;
+        dispatch(setUserId(userId));
+        dispatch(setToken(token));
+        navigation.navigate("Name");
+      }
+    } catch (err) {
+      Alert.alert('Registration Failed', 'An error occurred during registration');
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.imageContainer}>
-        <Image
-          source={require('../assets/loginScreenBg.png')} // Ensure this path is correct
-          style={styles.image}
-        />
-      </View>
-      <View style={styles.overlay}>
-        <Text style={styles.title}>Create an account</Text>
-        <Text style={styles.subtitle}>Enter your email to sign up for this app</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="email@domain.com or username"
-          placeholderTextColor="#888"
-          value={username}
-          onChangeText={setUsername}
-        />
-        <TextInput
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.imageContainer}>
+          <Image
+            source={require('../assets/loginScreenBg.png')}
+            style={styles.image}
+          />
+        </View>
+        <View style={styles.overlay}>
+          <Text style={styles.title}>Create an account</Text>
+          <Text style={styles.subtitle}>Enter your email to sign up for this app</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="email@domain.com or username"
+            placeholderTextColor="#888"
+            value={username}
+            onChangeText={setUsername}
+          />
+          <TextInput
             style={styles.input}
             placeholder="Password"
             placeholderTextColor="#888"
@@ -37,32 +87,34 @@ const RegisterScreen = ({ navigation }) => {
             onChangeText={setPassword}
           />
           <Text style={styles.registerText}>
-          Already have an account?{' '}
-          <Text style={styles.linkText} onPress={() => navigation.navigate('Login')}>
-            Login
+            Already have an account?{' '}
+            <Text style={styles.linkText} onPress={() => navigation.navigate('Login')}>
+              Login
+            </Text>
           </Text>
-        </Text>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={()=>navigation.navigate('Name',{username, password,userId})}
-        >
-          <Text style={styles.buttonText}>Sign up with email</Text>
-        </TouchableOpacity>
-        <Text style={styles.orText}>or continue with</Text>
-        <TouchableOpacity style={styles.googleButton}>
-          <Image
-            source={{ uri: 'https://img.icons8.com/color/48/000000/google-logo.png' }}
-            style={styles.googleIcon}
-          />
-          <Text style={styles.googleButtonText}>Google</Text>
-        </TouchableOpacity>
-        <Text style={styles.termsText}>
-          By clicking continue, you agree to our{' '}
-          <Text style={styles.linkText}>Terms of Service</Text> and{' '}
-          <Text style={styles.linkText}>Privacy Policy</Text>
-        </Text>
-      </View>
-    </View>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={checkUsernameAvailability}
+            disabled={isLoading}
+          >
+            <Text style={styles.buttonText}>{isLoading ? 'Checking...' : 'Sign up with email'}</Text>
+          </TouchableOpacity>
+          <Text style={styles.orText}>or continue with</Text>
+          <TouchableOpacity style={styles.googleButton}>
+            <Image
+              source={{ uri: 'https://img.icons8.com/color/48/000000/google-logo.png' }}
+              style={styles.googleIcon}
+            />
+            <Text style={styles.googleButtonText}>Google</Text>
+          </TouchableOpacity>
+          <Text style={styles.termsText}>
+            By clicking continue, you agree to our{' '}
+            <Text style={styles.linkText}>Terms of Service</Text> and{' '}
+            <Text style={styles.linkText}>Privacy Policy</Text>
+          </Text>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -71,16 +123,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   imageContainer: {
     width: screenWidth,
     height: screenHeight * 0.75,
   },
   image: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     resizeMode: 'contain',
   },
   overlay: {
+    width: '100%',
     paddingHorizontal: 30,
     alignItems: 'center',
     marginTop: -screenHeight * 0.45,

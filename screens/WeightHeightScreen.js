@@ -1,16 +1,31 @@
 // src/screens/WeightHeightScreen.js
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
-
-const WeightHeightScreen = ({ navigation, route }) => {
-  const {  userId, username, password,name, gender, dateOfBirth } = route.params;
+import { useSelector,useDispatch } from 'react-redux';
+import { API_URL } from '@env';
+import axios  from 'axios';
+const WeightHeightScreen = ({ navigation }) => {
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
-
-  const handleNext = () => {
-    navigation.navigate('FitnessLevel', { userId, username, password,name, gender, dateOfBirth, weight, height });
+  const userId = useSelector((state) => state.user.userId);
+  const handleUpdate = async () => {
+    
+    try {
+      console.log(`http://${API_URL}/users/update-demographics`);
+      const response = await axios.put(`http://${API_URL}/users/update-demographics`, {
+        userId,
+        weight,
+        height
+      });
+      console.log(response.data);
+      if (response.data) {
+        navigation.navigate('FitnessLevel');
+      }
+    } catch (err) {
+      console.log(err);
+      Alert.alert('There was an error. Please try again', err);
+    }
   };
-
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Weight</Text>
@@ -29,7 +44,7 @@ const WeightHeightScreen = ({ navigation, route }) => {
         onChangeText={setHeight}
         keyboardType="numeric"
       />
-      <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+      <TouchableOpacity style={styles.nextButton} onPress={handleUpdate}>
         <Text style={styles.nextButtonText}>→</Text>
       </TouchableOpacity>
     </View>
@@ -53,9 +68,8 @@ const styles = StyleSheet.create({
   input: {
     padding: 15,
     width:150,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: "gainsboro",
+    
+    backgroundColor: "#E7E7E7",
     borderRadius: 10,
     marginBottom: 20,
   },

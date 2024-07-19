@@ -6,9 +6,14 @@ import DateRangePickerComponent from "../components/DateRangePickerComponent";
 import GraphComponent from "../components/GraphComponent";
 import BarChartComponent from '../components/BarChartComponent';
 import { Dimensions } from 'react-native';
+import { useSelector,useDispatch } from 'react-redux';
+import { API_URL } from '@env';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const WorkoutReportScreen = ({userId}) => { 
-  
+const WorkoutReportScreen = () => { 
+  const insets = useSafeAreaInsets();
+  const token = useSelector((state) => state.user.token);
+  const userId = useSelector((state) => state.user.userId);
   console.log("report:",userId);
   const screenWidth = Dimensions.get('window').width;
 
@@ -22,7 +27,7 @@ const WorkoutReportScreen = ({userId}) => {
   const [aggregatedData, setAggregatedData] = useState([]);
 
   const route = useRoute();
-  const API_URL = "192.168.2.108:5000/";
+  //const API_URL = "192.168.2.108:5000/";
 
   useEffect(() => {
     fetchWorkoutSummary();
@@ -59,7 +64,14 @@ const WorkoutReportScreen = ({userId}) => {
 
   const fetchWorkoutSummary = async () => {
     try {
-      const response = await axios.get(`http://${API_URL}users/${userId}/workoutSummary`);
+      const response = await axios.get(`http://${API_URL}/users/${userId}/workoutSummary`,
+        {
+          headers:
+          {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
       setTotalWorkouts(response.data.totalWorkouts);
     } catch (error) {
       console.error('Error fetching workout summary:', error);
@@ -70,8 +82,15 @@ const WorkoutReportScreen = ({userId}) => {
   const fetchWorkoutHistory = async () => {
     console.log("hello");
     try {
-      console.log(`http://${API_URL}users/${userId}/workoutHistory`);
-      const response = await axios.get(`http://${API_URL}users/${userId}/workoutHistory`);
+      console.log(`http://${API_URL}/users/${userId}/workoutHistory`);
+      const response = await axios.get(`http://${API_URL}/users/${userId}/workoutHistory`,
+        {
+          headers:
+          {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
       console.log("response:",response.data);
       setWorkoutHistory(response.data.filteredWorkoutHistory);
     } catch (error) {
@@ -82,7 +101,13 @@ const WorkoutReportScreen = ({userId}) => {
 
   const fetchMaxStrength = async () => {
     try {
-      const response = await axios.get(`http://${API_URL}users/maxStrength/${userId}`);
+      const response = await axios.get(`http://${API_URL}/users/maxStrength/${userId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
       const maxStrengthData = response.data;
       // Calculate the total max strength value
       const strengthValues = maxStrengthData.map(data => data.strength);
@@ -262,6 +287,7 @@ const WorkoutReportScreen = ({userId}) => {
 
 
   return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
     <ScrollView style={styles.container}>
        <View style={styles.headerContainer}>
         <Text style={styles.headerText}>Workout Summary</Text>
@@ -297,6 +323,7 @@ const WorkoutReportScreen = ({userId}) => {
       )}
       </View>
     </ScrollView>
+    </View>
   );
 };
 

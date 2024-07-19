@@ -4,16 +4,22 @@ import axios from 'axios';
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import { Dimensions } from 'react-native';
 import GraphComponent from '../components/GraphComponent';
+import { API_URL } from '@env';
+import { useSelector,useDispatch } from 'react-redux';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const screenWidth = Dimensions.get('window').width;
 
 const ProtocolDetailScreen = () => {
+  const insets = useSafeAreaInsets();
+  const token = useSelector((state) => state.user.token);
+  const userId = useSelector((state) => state.user.userId);
   const route = useRoute();
-  const { userId, protocol } = route.params;
+  const { protocol } = route.params;
   const [workoutHistory, setWorkoutHistory] = useState([]);
   const [selectedHand, setSelectedHand] = useState({}); // State to keep track of selected hand for each workout
   const isFocused = useIsFocused();
-  const API_URL = "192.168.2.108:5000/";
+  //const API_URL = "192.168.2.108:5000/";
 
   useEffect(() => {
     if (isFocused) {
@@ -23,7 +29,13 @@ const ProtocolDetailScreen = () => {
 
   const fetchWorkoutHistory = async () => {
     try {
-      const response = await axios.get(`http://${API_URL}users/${userId}/workouts/${protocol}`);
+      const response = await axios.get(`http://${API_URL}/users/${userId}/workouts/${protocol}`,
+      {
+        headers:
+        {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setWorkoutHistory(response.data);
     } catch (error) {
       console.error('Error fetching workout summary:', error);
@@ -57,6 +69,7 @@ const ProtocolDetailScreen = () => {
     const percentages = hand === 'left' ? workout.leftHandPercentages : workout.rightHandPercentages;
 
     return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
       <View key={workout._id.$oid} style={styles.workoutItemContainer}>
         <View style={styles.protocolContainer}>
           <Text style={styles.workoutText}>{workout.protocol}</Text>
@@ -102,6 +115,7 @@ const ProtocolDetailScreen = () => {
             <Text style={[styles.percentageAmt, { color: getLevelColor('Hard') }]}>{percentages.belowThreshold}%</Text>
           </View>
         </View>
+      </View>
       </View>
     );
   };

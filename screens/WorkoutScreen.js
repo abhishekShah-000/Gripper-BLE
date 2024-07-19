@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
-//import { API_URL } from '@env';
-
+import { API_URL } from '@env';
+import { useSelector,useDispatch } from 'react-redux';
 const WorkoutScreen = ({ route }) => {
-  const API_URL = "192.168.2.117:5000/";
-  const userId = route.params;
+  //const API_URL = "192.168.2.117:5000/";
+  const userId = useSelector((state) => state.user.userId);
+  const token = useSelector((state) => state.user.token);
   const [workouts, setWorkouts] = useState([]);
   const [selectedOption, setSelectedOption] = useState(null);
   const [selectedLevel, setSelectedLevel] = useState(null);
@@ -18,8 +19,15 @@ const WorkoutScreen = ({ route }) => {
 
   const fetchWorkouts = async () => {
     try {
-      console.log(`http://${API_URL}Protocol`);
-      const response = await axios.get(`http://${API_URL}Protocol`);
+      console.log(`http://${API_URL}/Protocol`);
+      const response = await axios.get(`http://${API_URL}/Protocol`,
+        {
+          headers:
+          {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
       setWorkouts(response.data);
     } catch (error) {
       console.error('Error fetching workouts:', error);

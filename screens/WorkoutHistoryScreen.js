@@ -5,14 +5,20 @@ import { useIsFocused } from '@react-navigation/native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useNavigation, useRoute } from "@react-navigation/native";
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useSelector,useDispatch } from 'react-redux';
+import { API_URL } from '@env';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const WorkoutHistoryScreen = ({ userId }) => {
+const WorkoutHistoryScreen = () => {
+  const insets = useSafeAreaInsets();
+  const token = useSelector((state) => state.user.token);
+  const userId = useSelector((state) => state.user.userId);
   const [workoutHistory, setWorkoutHistory] = useState([]);
   const [protocolCounts, setProtocolCounts] = useState({});
   const isFocused = useIsFocused();
   const navigation = useNavigation();
-  const API_URL = "192.168.2.108:5000/";
-
+  //const API_URL = "192.168.2.108:5000/";
+  console.log(token);
   useEffect(() => {
     if (isFocused) {
       fetchWorkoutHistory();
@@ -21,8 +27,14 @@ const WorkoutHistoryScreen = ({ userId }) => {
 
   const fetchWorkoutHistory = async () => {
     try {
-      console.log(`http://${API_URL}users/${userId}/workoutHistory`);
-      const response = await axios.get(`http://${API_URL}users/${userId}/workoutHistory`);
+      console.log(`http://${API_URL}/users/${userId}/workoutHistory`);
+      const response = await axios.get(`http://${API_URL}/users/${userId}/workoutHistory`,{
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+      
+      );
       setWorkoutHistory(response.data.filteredWorkoutHistory);
       setProtocolCounts(response.data.protocolCounts);
     } catch (error) {
@@ -52,12 +64,14 @@ const WorkoutHistoryScreen = ({ userId }) => {
   );
 
   return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
     <ScrollView style={styles.container}>
       <View style={styles.historyContainer}>
         <Text style={styles.historyTitle}>Workout History</Text>
         {renderProtocolCount()}
       </View>
     </ScrollView>
+    </View>
   );
 };
 

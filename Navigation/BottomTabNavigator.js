@@ -8,6 +8,8 @@ import MainScreen from '../screens/MainScreen';
 import WorkoutReportScreen from '../screens/WorkoutReportScreen';
 import WorkoutHistoryScreen from '../screens/WorkoutHistoryScreen'; // You need to create this screen
 import WelcomeScreen from '../screens/WelcomeScreen';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import WorkoutScreen from '../screens/WorkoutScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -17,11 +19,18 @@ const defaultStackScreenOptions = {
     gestureEnabled: true,
     cardOverlayEnabled: true,
     ...TransitionPresets.DefaultTransition,
+    safeAreaInsets: { top: 100, bottom: 0, left: 0, right: 0 }, 
   };
 const HomeStack = ({ userId }) => (
     <Stack.Navigator screenOptions={defaultStackScreenOptions}>
       <Stack.Screen name="Welcome">
         {() => <WelcomeScreen/>}
+      </Stack.Screen>
+      <Stack.Screen name="Workout">
+        {() => <WorkoutScreen/>}
+      </Stack.Screen>
+      <Stack.Screen name="Main">
+        {() => <MainScreen/>}
       </Stack.Screen>
   
     </Stack.Navigator>

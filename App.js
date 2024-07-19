@@ -1,12 +1,14 @@
 // App.js
 import 'react-native-gesture-handler';
 import React from 'react';
+import { View, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { DataProvider } from './BLEContext';
 import { Provider } from 'react-redux';
 import { store } from './src/store/store';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 // Import your screens
 import LoginScreen from './screens/LoginScreen';
@@ -28,6 +30,8 @@ import GripStrengthenerControlScreen from './screens/GripStrengthenerControlScre
 import WorkoutReportScreen from './screens/WorkoutReportScreen';
 import BottomTabNavigator from './Navigation/BottomTabNavigator'; // Import the BottomTabNavigator
 import ProtocolDetailScreen from './screens/ProtocolDetailScreen';
+import AgeGroupScreen from './screens/AgeGroupScreen';
+import GaolsScreen from './screens/GoalsScreen';
 import { TransitionPresets } from '@react-navigation/stack';
 
 const Stack = createStackNavigator();
@@ -65,7 +69,9 @@ const AppNavigator = () => (
     <Stack.Screen name="Name" component={NameScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Gender" component={GenderScreen} options={{ headerShown: false }} />
     <Stack.Screen name="DateOfBirth" component={DateOfBirthScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="AgeGroup" component={AgeGroupScreen} options={{ headerShown: false }} />
     <Stack.Screen name="WeightHeight" component={WeightHeightScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="Goals" component={GaolsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="FitnessLevel" component={FitnessLevelScreen} options={{ headerShown: false }} />
     <Stack.Screen name="HeartCondition" component={HeartConditionScreen} options={{ headerShown: false }} />
     <Stack.Screen name="ProtocolDetail" component={ProtocolDetailScreen} options={{ headerShown: false }} />
@@ -82,11 +88,16 @@ const AppNavigator = () => (
 const App = () => {
   return (
     <Provider store={store}>
-    <DataProvider>
-      <NavigationContainer>
-        <AppNavigator />
-      </NavigationContainer>
-    </DataProvider>
+      <DataProvider>
+        <SafeAreaProvider>
+          <StatusBar translucent backgroundColor="transparent" />
+          <View style={{ flex: 1 }}>
+            <NavigationContainer>
+              <AppNavigator />
+            </NavigationContainer>
+          </View>
+        </SafeAreaProvider>
+      </DataProvider>
     </Provider>
   );
 };

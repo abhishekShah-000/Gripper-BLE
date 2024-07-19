@@ -1,11 +1,29 @@
 // src/screens/GenderScreen.js
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useSelector,useDispatch } from 'react-redux';
+import { API_URL } from '@env';
+import axios from 'axios';
 
-const GenderScreen = ({ navigation, route }) => {
-  const {  userId,username, password,name } = route.params;
+const GenderScreen = ({ navigation }) => {
   const [gender, setGender] = useState('');
-
+  const userId = useSelector((state) => state.user.userId);
+  const handleUpdate = async () => {
+    try {
+      console.log(`http://${API_URL}/users/update-demographics`);
+      const response = await axios.put(`http://${API_URL}/users/update-demographics`, {
+        userId,
+        gender
+      });
+      console.log(response.data);
+      if (response.data) {
+        navigation.navigate("DateOfBirth");
+      }
+    } catch (err) {
+      console.log(err);
+      Alert.alert('There was an error. Please try again', err);
+    }
+  };
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Gender</Text>
@@ -33,7 +51,7 @@ const GenderScreen = ({ navigation, route }) => {
       </View>
       <TouchableOpacity
         style={styles.nextButton}
-        onPress={() => navigation.navigate('DateOfBirth', { userId, username, password, name, gender })}
+        onPress={handleUpdate}
       >
         <Text style={styles.nextButtonText}>→</Text>
       </TouchableOpacity>
@@ -57,7 +75,6 @@ const styles = StyleSheet.create({
   },
   buttons: {
     flexDirection: 'row',
-    gap:30,
     justifyContent: 'flex-start',
     marginBottom: 10,
   },
@@ -69,9 +86,8 @@ const styles = StyleSheet.create({
   },
   button: {
     padding: 20,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: "gainsboro",
+    margin:10,
+    backgroundColor: "#E7E7E7",
     borderRadius: 5,
     width: '30%',
     alignItems: 'center',

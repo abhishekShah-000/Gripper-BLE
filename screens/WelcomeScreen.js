@@ -2,17 +2,20 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { useNavigation, useRoute, useIsFocused } from '@react-navigation/native';
 import axios from 'axios';
-//import { API_URL } from '@env';
+import { API_URL } from '@env';
 import { useData  } from '../BLEContext';
 import useBLE from '../useBLE';
 import SpeedometerComponent from '../components/SpeedometerComponent';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector,useDispatch } from 'react-redux';
 import { setMaxStrength } from '../src/store/userSlice';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const WelcomeScreen = () => {
+  const insets = useSafeAreaInsets();
+  const token = useSelector((state) => state.user.token);
   const dispatch = useDispatch();
-  const API_URL = "192.168.2.117:5000/";
+  //const API_URL = "192.168.2.117:5000/";
   const route = useRoute();
   const navigation = useNavigation();
   const isFocused = useIsFocused();
@@ -36,7 +39,7 @@ const WelcomeScreen = () => {
   const lastProcessedIndex = useRef(0);
   const userId = useSelector((state) => state.user.userId);
   const maxStrength = useSelector((state) => state.user.maxStrength);
-  console.log("Redux:",userId,maxStrength);
+  console.log("Redux:",token, userId,maxStrength);
   
 
   // useEffect(() => {
@@ -95,9 +98,17 @@ const WelcomeScreen = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get(`http://${API_URL}users/maxStrength/${userId}`);
+        console.log(`http://${API_URL}/users/maxStrength/${userId}`);
+        const response = await axios.get(`http://${API_URL}/users/maxStrength/${userId}`,
+          {
+            headers:
+            {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
         const data = response.data;
-        console.log(data);
+        console.log("max data:",data);
 
         if (Array.isArray(data)) {
           // Calculate average strength
@@ -157,6 +168,7 @@ const WelcomeScreen = () => {
 
 
   return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
     <View style={[styles.container, darkMode && styles.darkContainer]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.openDrawer()}>
@@ -198,6 +210,7 @@ const WelcomeScreen = () => {
       </View>
       
       
+    </View>
     </View>
   );
 };

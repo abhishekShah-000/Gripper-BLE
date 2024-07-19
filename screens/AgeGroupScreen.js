@@ -3,22 +3,21 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSelector,useDispatch } from 'react-redux';
 import { API_URL } from '@env';
-import axios  from 'axios';
+import axios from 'axios';
 
-const FitnessLevelScreen = ({ navigation}) => {
-  const [fitnessLevel, setFitnessLevel] = useState('');
+const AgeGroupScreen = ({ navigation }) => {
+  const [ageRange, setRange] = useState('');
   const userId = useSelector((state) => state.user.userId);
   const handleUpdate = async () => {
-    
     try {
       console.log(`http://${API_URL}/users/update-demographics`);
       const response = await axios.put(`http://${API_URL}/users/update-demographics`, {
         userId,
-        fitnessLevel,
+        ageRange
       });
       console.log(response.data);
       if (response.data) {
-        navigation.navigate('Goals')
+        navigation.navigate("WeightHeight");
       }
     } catch (err) {
       console.log(err);
@@ -27,35 +26,47 @@ const FitnessLevelScreen = ({ navigation}) => {
   };
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Current fitness level</Text>
+      <Text style={styles.label}>Age Group</Text>
       <View style={styles.buttons}>
         <TouchableOpacity
-          style={[styles.button, fitnessLevel === 'Very Active' && styles.selectedButton]}
-          onPress={() => setFitnessLevel('Very Active')}
+          style={[styles.button, ageRange === '0-18' && styles.selectedButton]}
+          onPress={() => setRange('0-18')}
         >
-          <Text style={[styles.buttonText, fitnessLevel === 'Very Active' && styles.selectedButtonText]}>Very Active</Text>
+          <Text style={[styles.buttonText, ageRange === '0-18' && styles.selectedButtonText]}>0-18</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.button, fitnessLevel === 'Sometimes' && styles.selectedButton]}
-          onPress={() => setFitnessLevel('Sometimes')}
+          style={[styles.button, ageRange === '18-32' && styles.selectedButton]}
+          onPress={() => setRange('18-32')}
         >
-          <Text style={[styles.buttonText, fitnessLevel === 'Sometimes' && styles.selectedButtonText]}>Sometimes</Text>
+          <Text style={[styles.buttonText, ageRange === '18-32' && styles.selectedButtonText]}>18-32</Text>
         </TouchableOpacity>
+      
       <TouchableOpacity
-        style={[styles.button, fitnessLevel === 'Never' && styles.selectedButton]}
-        onPress={() => setFitnessLevel('Never')}
+        style={[styles.button, ageRange === '32-50' && styles.selectedButton]}
+        onPress={() => setRange('32-50')}
       >
-        <Text style={[styles.buttonText, fitnessLevel === 'Never' && styles.selectedButtonText]}>Never</Text>
+        <Text style={[styles.buttonText, ageRange === '32-50' && styles.selectedButtonText]}>32-50</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.button, ageRange === '50-68' && styles.selectedButton]}
+        onPress={() => setRange('50-68')}
+      >
+        <Text style={[styles.buttonText, ageRange === '50-68' && styles.selectedButtonText]}>50-68</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.button, ageRange === '68+' && styles.selectedButton]}
+        onPress={() => setRange('68+')}
+      >
+        <Text style={[styles.buttonText, ageRange === '68+' && styles.selectedButtonText]}>68+</Text>
       </TouchableOpacity>
       </View>
       <TouchableOpacity
         style={styles.nextButton}
-        onPress={() => handleUpdate()}
+        onPress={handleUpdate}
       >
         <Text style={styles.nextButtonText}>→</Text>
       </TouchableOpacity>
     </View>
-    
   );
 };
 
@@ -87,11 +98,9 @@ const styles = StyleSheet.create({
   button: {
     padding: 20,
     margin:10,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: "gainsboro",
-    borderRadius: 10,
-    width: '40%',
+    backgroundColor: "#E7E7E7",
+    borderRadius: 5,
+    width: '30%',
     alignItems: 'center',
   },
   selectedButton: {
@@ -125,4 +134,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FitnessLevelScreen;
+export default AgeGroupScreen;

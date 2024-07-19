@@ -1,25 +1,28 @@
 // src/screens/HeartConditionScreen.js
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Button } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Button,Alert } from 'react-native';
 import axios  from 'axios';
+import { useSelector,useDispatch } from 'react-redux';
 //import { sendUserData } from '../services/api';
-//import { API_URL } from '@env';
-const HeartConditionScreen = ({ navigation, route }) => {
-  const API_URL = "192.168.2.102:5000/";
-  const { userId,username, password, name, gender, dateOfBirth, weight, height, fitnessLevel } = route.params;
-  console.log("id",userId);
+import { API_URL } from '@env';
+const HeartConditionScreen = ({ navigation }) => {
   const [heartCondition, setHeartCondition] = useState('');
-
-  const handleSubmit = async () => {
-    const data = {  userId, username, password,name, gender, dateOfBirth, weight, height, fitnessLevel, heartCondition };
+  const userId = useSelector((state) => state.user.userId);
+  const handleUpdate = async () => {
+    
     try {
-      const response = await axios.post(`http://${API_URL}users/register`, {
-        data
+      console.log(`http://${API_URL}/users/update-demographics`);
+      const response = await axios.put(`http://${API_URL}/users/update-demographics`, {
+        userId,
+        heartCondition,
       });
-      console.log('User data submitted successfully:', response);
-      navigation.navigate('Welcome',{userId}); // Navigate to the next screen or confirmation page
-    } catch (error) {
-      console.error('Error submitting user data:', error);
+      console.log(response.data);
+      if (response.data) {
+        navigation.navigate('BottomTabs')
+      }
+    } catch (err) {
+      console.log(err);
+      Alert.alert('There was an error. Please try again', err);
     }
   };
 
@@ -35,14 +38,14 @@ const HeartConditionScreen = ({ navigation, route }) => {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, heartCondition === 'No' && styles.selectedButton]}
-          onPress={() => setHeartCondition('Sometimes')}
+          onPress={() => setHeartCondition('No')}
         >
           <Text style={[styles.buttonText, heartCondition === 'No' && styles.selectedButtonText]}>No</Text>
         </TouchableOpacity>
       </View>
       <TouchableOpacity
         style={styles.nextButton}
-        onPress={() =>handleSubmit()}
+        onPress={() =>handleUpdate()}
       >
         <Text style={styles.nextButtonText}>→</Text>
       </TouchableOpacity>
@@ -67,7 +70,6 @@ const styles = StyleSheet.create({
   },
   buttons: {
     flexDirection: 'column',
-    gap:30,
     justifyContent: 'flex-start',
     marginBottom: 10,
   },
@@ -79,9 +81,8 @@ const styles = StyleSheet.create({
   },
   button: {
     padding: 20,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: "gainsboro",
+    margin:10,
+    backgroundColor: "#E7E7E7",
     borderRadius: 10,
     width: '25%',
     alignItems: 'center',

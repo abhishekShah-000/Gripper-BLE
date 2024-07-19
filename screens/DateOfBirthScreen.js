@@ -1,16 +1,32 @@
 // src/screens/DateOfBirthScreen.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { API_URL } from '@env';
+import axios from 'axios';
+import { useSelector,useDispatch } from 'react-redux';
 
-const DateOfBirthScreen = ({ navigation, route }) => {
-  const { userId, username, password, name, gender } = route.params;
+const DateOfBirthScreen = ({ navigation }) => {
   const [day, setDay] = useState('');
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');
-
-  const handleNext = () => {
-    const dateOfBirth = `${day}-${month}-${year}`; // You can format the date as needed
-    navigation.navigate('WeightHeight', { userId, username, password,name, gender, dateOfBirth });
+  const userId = useSelector((state) => state.user.userId);
+  const handleUpdate = async () => {
+    const dateOfBirth = `${year}-${month}-${day}`; // You can format the date as needed
+    console.log(dateOfBirth);
+    try {
+      console.log(`http://${API_URL}/users/update-demographics`);
+      const response = await axios.put(`http://${API_URL}/users/update-demographics`, {
+        userId: userId,
+        dateOfBirth: dateOfBirth
+      });
+      console.log(response.data);
+      if (response.data) {
+        navigation.navigate('AgeGroup');
+      }
+    } catch (err) {
+      console.log(err);
+      Alert.alert('There was an error. Please try again', err);
+    }
   };
 
   return (
@@ -42,7 +58,7 @@ const DateOfBirthScreen = ({ navigation, route }) => {
           maxLength={4}
         />
       </View>
-      <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+      <TouchableOpacity style={styles.nextButton} onPress={handleUpdate}>
         <Text style={styles.nextButtonText}>→</Text>
       </TouchableOpacity>
     </View>
@@ -65,23 +81,20 @@ const styles = StyleSheet.create({
   },
   fields: {
     flexDirection: 'row',
-    gap: 30,
   },
   input: {
+    margin:10,
     padding: 15,
-    borderWidth: 1,
     width: 70,
-    borderColor: '#ccc',
-    backgroundColor: "gainsboro",
+    backgroundColor: "#E7E7E7",
     borderRadius: 10,
     marginBottom: 20,
   },
   yearInput: {
+    margin:10,
     padding: 15,
-    borderWidth: 1,
     width: 120,
-    borderColor: '#ccc',
-    backgroundColor: "gainsboro",
+    backgroundColor: "#E7E7E7",
     borderRadius: 10,
     marginBottom: 20,
   },

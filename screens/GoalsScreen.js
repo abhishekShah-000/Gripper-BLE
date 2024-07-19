@@ -3,22 +3,21 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSelector,useDispatch } from 'react-redux';
 import { API_URL } from '@env';
-import axios  from 'axios';
+import axios from 'axios';
 
-const FitnessLevelScreen = ({ navigation}) => {
-  const [fitnessLevel, setFitnessLevel] = useState('');
+const GaolsScreen = ({ navigation }) => {
+  const [goals, setGoals] = useState('');
   const userId = useSelector((state) => state.user.userId);
   const handleUpdate = async () => {
-    
     try {
       console.log(`http://${API_URL}/users/update-demographics`);
       const response = await axios.put(`http://${API_URL}/users/update-demographics`, {
         userId,
-        fitnessLevel,
+        goals
       });
       console.log(response.data);
       if (response.data) {
-        navigation.navigate('Goals')
+        navigation.navigate("HeartCondition");
       }
     } catch (err) {
       console.log(err);
@@ -27,35 +26,47 @@ const FitnessLevelScreen = ({ navigation}) => {
   };
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Current fitness level</Text>
+      <Text style={styles.label}>What are your goals with this grip trainer?</Text>
       <View style={styles.buttons}>
         <TouchableOpacity
-          style={[styles.button, fitnessLevel === 'Very Active' && styles.selectedButton]}
-          onPress={() => setFitnessLevel('Very Active')}
+          style={[styles.button, goals === 'Lower Blood Pressure' && styles.selectedButton]}
+          onPress={() => setGoals('Lower Blood Pressure')}
         >
-          <Text style={[styles.buttonText, fitnessLevel === 'Very Active' && styles.selectedButtonText]}>Very Active</Text>
+          <Text style={[styles.buttonText, goals === 'Lower Blood Pressure' && styles.selectedButtonText]}>Lower Blood Pressure</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.button, fitnessLevel === 'Sometimes' && styles.selectedButton]}
-          onPress={() => setFitnessLevel('Sometimes')}
+          style={[styles.button, goals === 'Increase Grip Strength' && styles.selectedButton]}
+          onPress={() => setGoals('Increase Grip Strength')}
         >
-          <Text style={[styles.buttonText, fitnessLevel === 'Sometimes' && styles.selectedButtonText]}>Sometimes</Text>
+          <Text style={[styles.buttonText, goals === 'Increase Grip Strength' && styles.selectedButtonText]}>Increase Grip Strength</Text>
         </TouchableOpacity>
+      
       <TouchableOpacity
-        style={[styles.button, fitnessLevel === 'Never' && styles.selectedButton]}
-        onPress={() => setFitnessLevel('Never')}
+        style={[styles.button, goals === 'Injury Prevention/Rehabilitation' && styles.selectedButton]}
+        onPress={() => setGoals('Injury Prevention/Rehabilitation')}
       >
-        <Text style={[styles.buttonText, fitnessLevel === 'Never' && styles.selectedButtonText]}>Never</Text>
+        <Text style={[styles.buttonText, goals === 'Injury Prevention/Rehabilitation' && styles.selectedButtonText]}>Injury Prevention/Rehabilitation</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.button, goals === 'General Fitness' && styles.selectedButton]}
+        onPress={() => setGoals('General Fitness')}
+      >
+        <Text style={[styles.buttonText, goals === 'General Fitness' && styles.selectedButtonText]}>General Fitness</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.button, goals === 'For fun' && styles.selectedButton]}
+        onPress={() => setGoals('For fun')}
+      >
+        <Text style={[styles.buttonText, goals === 'For fun' && styles.selectedButtonText]}>For fun</Text>
       </TouchableOpacity>
       </View>
       <TouchableOpacity
         style={styles.nextButton}
-        onPress={() => handleUpdate()}
+        onPress={handleUpdate}
       >
         <Text style={styles.nextButtonText}>→</Text>
       </TouchableOpacity>
     </View>
-    
   );
 };
 
@@ -87,11 +98,9 @@ const styles = StyleSheet.create({
   button: {
     padding: 20,
     margin:10,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: "gainsboro",
-    borderRadius: 10,
-    width: '40%',
+    backgroundColor: "#E7E7E7",
+    borderRadius: 5,
+    width: '50%',
     alignItems: 'center',
   },
   selectedButton: {
@@ -125,4 +134,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FitnessLevelScreen;
+export default GaolsScreen;

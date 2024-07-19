@@ -1,10 +1,30 @@
 // src/screens/NameScreen.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
-
-const NameScreen = ({ navigation, route }) => {
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert} from 'react-native';
+import { API_URL } from '@env';
+import axios from 'axios';
+import { useSelector,useDispatch } from 'react-redux';
+const NameScreen = ({ navigation }) => {
   const [name, setName] = useState('');
-  const {  userId, username, password } = route.params;
+  const userId = useSelector((state) => state.user.userId);
+  const handleUpdate = async () => {
+    
+    try {
+      console.log(`http://${API_URL}/users/update-demographics`);
+      console.log("userid and name",userId,name);
+      const response = await axios.put(`http://${API_URL}/users/update-demographics`, {
+        userId,
+        name
+      });
+      console.log(response.data);
+      if (response.data) {
+        navigation.navigate("Gender");
+      }
+    } catch (err) {
+      console.log(err);
+      Alert.alert('There was an error. Please try again', err);
+    }
+  };
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Name</Text>
@@ -14,7 +34,9 @@ const NameScreen = ({ navigation, route }) => {
         value={name}
         onChangeText={setName}
       />
-      <TouchableOpacity style={styles.nextButton} onPress={() => navigation.navigate('Gender', {userId,username, password,name })}>
+      <TouchableOpacity style={styles.nextButton} onPress={() => handleUpdate()}>
+        
+        
         <Text style={styles.nextButtonText}>→</Text>
       </TouchableOpacity>
     </View>
@@ -37,9 +59,7 @@ const styles = StyleSheet.create({
   },
   input: {
     padding: 15,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor:"gainsboro",
+    backgroundColor: "#E7E7E7",
     borderRadius: 10,
     marginBottom: 20,
   },
