@@ -10,6 +10,7 @@ import WorkoutHistoryScreen from '../screens/WorkoutHistoryScreen'; // You need 
 import WelcomeScreen from '../screens/WelcomeScreen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import WorkoutScreen from '../screens/WorkoutScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -21,6 +22,13 @@ const defaultStackScreenOptions = {
     ...TransitionPresets.DefaultTransition,
     safeAreaInsets: { top: 100, bottom: 0, left: 0, right: 0 }, 
   };
+  const ProfileStack = ({ userId }) => (
+    <Stack.Navigator screenOptions={defaultStackScreenOptions}>
+      <Stack.Screen name="Profile">
+        {() => <ProfileScreen/>}
+      </Stack.Screen>
+    </Stack.Navigator>
+  );
 const HomeStack = ({ userId }) => (
     <Stack.Navigator screenOptions={defaultStackScreenOptions}>
       <Stack.Screen name="Welcome">
@@ -68,6 +76,9 @@ console.log("user:",userId);
           } else if (route.name === 'Report') {
             iconName = 'bar-chart-outline';
           }
+          else if(route.name == "Profile"){
+            iconName = 'person-outline';
+          }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
@@ -84,6 +95,9 @@ console.log("user:",userId);
       </Tab.Screen>
       <Tab.Screen name="Report">
         {() => <ReportStack userId={userId} />}
+      </Tab.Screen>
+      <Tab.Screen name="Profile">
+        {() => <ProfileStack userId={userId} />}
       </Tab.Screen>
      
     </Tab.Navigator>

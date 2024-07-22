@@ -4,9 +4,12 @@ import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { setUserId, setMaxStrength,setToken } from '../src/store/userSlice';
 import { API_URL } from '@env';
+import Popup from '../components/PopUp';
+
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const LoginScreen = ({ navigation }) => {
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
   const dispatch = useDispatch();
   //const { userId, maxStrength } = useSelector((state) => state.user);
 
@@ -29,16 +32,12 @@ const LoginScreen = ({ navigation }) => {
         const token = response.data.token;
         dispatch(setUserId(userId));
         dispatch(setToken(token));
+        navigation.navigate("BottomTabs");
         //dispatch(setMaxStrength(response.data.maxStrength[0]));
-        Alert.alert('Login Successful', 'Welcome to the app!', [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate("BottomTabs"),
-          },
-        ]);
       }
     } catch (err) {
-      Alert.alert('Login Failed', 'Invalid username or password');
+      setIsPopupOpen(true);
+      //Alert.alert('Login Failed', 'Invalid username or password');
     }
   };
 
@@ -47,14 +46,18 @@ const LoginScreen = ({ navigation }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
+       
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
+      
         <View style={styles.imageContainer}>
           <Image
             source={require('../assets/loginScreenBg.png')} // Ensure this path is correct
             style={styles.image}
           />
         </View>
+        
         <View style={styles.overlay}>
+        
           <Text style={styles.title}>Login</Text>
           <Text style={styles.subtitle}>Enter your credentials to sign in</Text>
           <TextInput
@@ -99,6 +102,17 @@ const LoginScreen = ({ navigation }) => {
           </Text>
          
         </View>
+        {isPopupOpen && (
+  <Popup
+    isOpen={isPopupOpen}
+    onClose={() => setIsPopupOpen(false)}
+    title="Incorrect Credentials!"
+    message="You have entered invalid credentials, please try again"
+    buttonText="Try again"
+    height={400} 
+    iconSource={require('../assets/crossIcon.png')} 
+  />
+)}
       </ScrollView>
     </KeyboardAvoidingView>
   );

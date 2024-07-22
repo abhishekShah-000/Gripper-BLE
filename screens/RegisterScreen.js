@@ -4,10 +4,19 @@ import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { setUserId, setToken } from '../src/store/userSlice';
 import { API_URL } from '@env';
+import Popup from '../components/PopUp';
+
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const RegisterScreen = ({ navigation }) => {
   const dispatch = useDispatch();
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [popupConfig, setPopupConfig] = useState({
+    title: '',
+    message: '',
+    buttonText: '',
+    iconSource: null
+  });
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -27,17 +36,28 @@ const RegisterScreen = ({ navigation }) => {
         console.log("available");
         handleRegister();
       } else {
-        Alert.alert('Error', 'Username already exists. Please choose a different one.');
+        setPopupConfig({
+          title: "Username Unavailable",
+          message: "The username you entered is already taken. Please choose a different one.",
+          buttonText: "Try Again",
+          iconSource: require('../assets/crossIcon.png')
+        });
+        setIsPopupOpen(true);
       }
     } catch (error) {
       setIsLoading(false);
       console.error('Error checking username:', error);
-      Alert.alert('Error', 'An error occurred while checking username availability. Please try again.');
+      setPopupConfig({
+        title: "Error",
+        message: "An error occurred while checking username availability. Please try again.",
+        buttonText: "OK",
+        iconSource: require('../assets/crossIcon.png')
+      });
+      setIsPopupOpen(true);
     }
   };
 
   const handleRegister = async () => {
-    
     try {
       const response = await axios.post(`http://${API_URL}/users/register`, {
         username,
@@ -52,7 +72,13 @@ const RegisterScreen = ({ navigation }) => {
         navigation.navigate("Name");
       }
     } catch (err) {
-      Alert.alert('Registration Failed', 'An error occurred during registration');
+      setPopupConfig({
+        title: "Registration Failed",
+        message: "An error occurred during registration. Please try again.",
+        buttonText: "OK",
+        iconSource: require('../assets/crossIcon.png')
+      });
+      setIsPopupOpen(true);
     }
   };
 
@@ -113,6 +139,17 @@ const RegisterScreen = ({ navigation }) => {
             <Text style={styles.linkText}>Privacy Policy</Text>
           </Text>
         </View>
+        {isPopupOpen && (
+          <Popup
+            isOpen={isPopupOpen}
+            onClose={() => setIsPopupOpen(false)}
+            title={popupConfig.title}
+            message={popupConfig.message}
+            buttonText={popupConfig.buttonText}
+            height={400} 
+            iconSource={popupConfig.iconSource}
+          />
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );

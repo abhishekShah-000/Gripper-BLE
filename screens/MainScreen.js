@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef  } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Animated} from 'react-native';
 import SpeedometerComponent from '../components/SpeedometerComponent'; // Adjust path as per your file structure
 import axios from 'axios';
 import { useNavigation, useRoute} from '@react-navigation/native';
@@ -48,6 +48,32 @@ const MainScreen = () => {
   const pressTimerRef = useRef(null);
   const longPressActiveRef = useRef(null);
 
+  const [isSpotlightActive, setIsSpotlightActive] = useState(true);
+  const [highlightState, setHighlightState] = useState([true,false]); // Track which workout is highlighted
+  const [scaleValue] = useState(new Animated.Value(1));
+  const animatedStyle = {
+    transform: [{ scale: scaleValue }],
+    zIndex:100,
+  };
+  const animateBreathing = () => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(scaleValue, {
+          toValue: 1.1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleValue, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }), 
+      ])
+    ).start();
+  };
+  useEffect(() => {
+    animateBreathing();
+  }, [highlightState]);
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -246,7 +272,16 @@ const MainScreen = () => {
       Alert.alert('Error Saving Workout', 'Please try again later.');
     }
   };
+  const highlightButton = (index) => {
+    setHighlightState((prevState) => prevState.map((state, i) => i === index));
+  };
+
   const handleSwitchHand = () => {
+    if(activeHand=="right" && isSpotlightActive)
+    {
+      console.log("hello");
+      highlightButton(1);
+    }
     setActiveHand((prevHand) => (prevHand === 'left' ? 'right' : 'left'));
   };
 
@@ -264,7 +299,9 @@ const MainScreen = () => {
 
   return (
     <View style={{ flex: 1 }}>
+      <View style={[isSpotlightActive && styles.overlay]} />
       <View style={styles.container}>
+      
         <View style={styles.speedometerContainer}>
           <View style={{ alignSelf: 'center', flexDirection: 'row', paddingBottom: 50 }}>
             <Text style={styles.setText}>Set</Text>
@@ -275,23 +312,35 @@ const MainScreen = () => {
             minVal={minThresholdValue}
             maxVal = {maxThresholdValue}
           />
-         
-       
           <View style={styles.handSwitch}>
             <TouchableOpacity 
             onPress={handleSwitchHand}
             style={styles.handButton}>
               <Text style={[styles.handButtonText, activeHand === 'left' ? {color: '#43A1A4'}:styles.handButtonText]}>Left Hand</Text>
             </TouchableOpacity>
+            <Animated.View style={ isSpotlightActive && highlightState[0] && animatedStyle }>
             <TouchableOpacity 
             onPress={handleSwitchHand}
-            style={styles.handButton}>
+            style={[styles.handButton, highlightState[0] && styles.highlightedButton]}>
               <Text 
               style={[styles.handButtonText, activeHand === 'right' ? {color: '#43A1A4'}:styles.handButtonText]}>Right Hand</Text>
             </TouchableOpacity>
+            </Animated.View>
           </View>
+          <Animated.View style={[isSpotlightActive &&  highlightState[1] && animatedStyle]}>
+          <TouchableOpacity 
+            onPress={()=>
+              {
+                setIsSpotlightActive(false);
+                //setHighlightState(null);
+              }
+            }
+            style={[styles.holdNowButton, isSpotlightActive && highlightState[1] && styles.highlightedButton]}>
+              <Text style={styles.handButtonText}>Hold now</Text>
+            </TouchableOpacity>
+            </Animated.View>
         </View>
-        <View style={styles.handSwitch}>
+        {/* <View style={styles.handSwitch}>
           <TouchableOpacity
             style={[styles.pressButton, startPressDisabled && styles.disabledButton]}
             onPress={handleStartPress}
@@ -308,12 +357,25 @@ const MainScreen = () => {
         >
           <Text style={styles.pressButtonText}>Long Press</Text>
         </TouchableOpacity>
-        </View>
+        </View> */}
         </View>
       <View style={styles.bottomContainer}>
         <View style={styles.timerContainer}>
-          <Text style={styles.timerText}>Left {activeHand === 'left' ? pressDurationLeft : pressDurationRight} Sec.</Text>
-          <Text style={styles.timerText}>Rest {activeHand === 'left' ? restDurationLeft : restDurationRight} Sec.</Text>
+        <View stle = {styles.timer}>
+          <View style = {{flexDirection:'row',alignItems:'baseline'}}>
+          <Text style={styles.timerText}>{activeHand === 'left' ? pressDurationLeft : pressDurationRight}</Text>
+          <Text style={{fontSize:16,fontWeight:'bold',color: 'gray',}}>Sec</Text>
+          </View>
+          <Text style={styles.currentHand}>{activeHand}</Text>
+          </View>
+          <View stle = {styles.timer}>
+          <View style = {{flexDirection:'row',alignItems:'baseline'}}>
+          <Text style={styles.timerText}>{activeHand === 'left' ? restDurationLeft : restDurationRight}</Text>
+          <Text style={{fontSize:16,fontWeight:'bold',color: 'gray',}}>Sec</Text>
+          </View>
+          <Text style={styles.currentHand}>Rest</Text>
+          </View>
+         
         </View>
         {/* <View style={styles.statsContainer}>
           <View style={styles.statBox}>
@@ -344,14 +406,30 @@ const MainScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    top:100,
+    flexGrow: 1,
+    top:"15%",
     justifyContent: 'flex-start',
     alignItems: 'center',
-   
+    zIndex:20,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(0, 0, 0, .8)',
+    zIndex: 5,
+  },
+  highlightedButton: {
+    justifyContent:'center',
+    borderColor: 'yellow',
+    borderWidth: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    zIndex:10,
   },
   bottomContainer: {
-    
+    flexGrow:1,
+    justifyContent:'center',
     alignItems: 'center',
     marginVertical: 20,
   },
@@ -374,6 +452,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 3.84,
     elevation: 5,
+    zIndex:20,
+    
   },
   setText: {
     fontSize: 24,
@@ -389,6 +469,8 @@ const styles = StyleSheet.create({
   },
   handSwitch: {
     flexDirection: 'row',
+    justifyContent:"center",
+    
   },
   handButton: {    
     alignItems: 'center',
@@ -398,9 +480,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'gainsboro',
   },
   handButtonText: {
+    alignSelf:'center',
     fontSize: 16,
     color: 'black',
     fontWeight: 'bold',
+    zIndex:100,
   },
   longPressButton: {
     backgroundColor: '#00FF00',
@@ -417,16 +501,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  holdNowButton:
+  {
+    alignContent:'center',
+    justifyContent:'center',
+    borderRadius: 5,
+    paddingVertical:20,
+    backgroundColor: 'gainsboro',
+    margin:12,
+  },
   timerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '90%',
-    marginVertical: 10,
+    //gap:30,
+    width: '70%',
+    //margin:30,
+    //marginVertical: 10,
+  },
+  timer:
+  {
+    flexDirection:'column'
   },
   timerText: {
-    fontSize: 20,
-    color: 'gray',
+    fontSize: 44,
+    color: 'black',
     fontWeight: 'bold',
+  },
+  currentHand:
+  {
+    color: 'gray',
+    fontSize:16,
   },
   statsContainer: {
     flexDirection: 'row',

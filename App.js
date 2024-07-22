@@ -33,7 +33,8 @@ import ProtocolDetailScreen from './screens/ProtocolDetailScreen';
 import AgeGroupScreen from './screens/AgeGroupScreen';
 import GaolsScreen from './screens/GoalsScreen';
 import { TransitionPresets } from '@react-navigation/stack';
-
+import ProfileScreen from './screens/ProfileScreen';
+import EditProfileScreen from './screens/EditProfileScreen';
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
 
@@ -74,6 +75,8 @@ const AppNavigator = () => (
     <Stack.Screen name="Goals" component={GaolsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="FitnessLevel" component={FitnessLevelScreen} options={{ headerShown: false }} />
     <Stack.Screen name="HeartCondition" component={HeartConditionScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
     <Stack.Screen name="ProtocolDetail" component={ProtocolDetailScreen} options={{ headerShown: false }} />
     <Stack.Screen 
     name="BottomTabs" 
