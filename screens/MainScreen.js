@@ -4,17 +4,22 @@ import SpeedometerComponent from '../components/SpeedometerComponent'; // Adjust
 import axios from 'axios';
 import { useNavigation, useRoute} from '@react-navigation/native';
 import { API_URL } from '@env';
+import { setSpotlightActive } from '../src/store/userSlice';
 import { useSelector,useDispatch } from 'react-redux';
+import { saveData } from '../components/asyncStorageUtils';
 import RepCounter from '../components/RepCounter'; // Adjust path if RepCounter is in a separate file
 import CustomCircularProgress from '../components/CustomCircularProgress'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const MainScreen = () => {
   const route = useRoute();
   const {protocol,level} = route.params;
+  const dispatch = useDispatch();
   const token = useSelector((state) => state.user.token);
+  const insets = useSafeAreaInsets();
   const userId = useSelector((state) => state.user.userId);
   const navigation = useNavigation();
-  const [activeHand, setActiveHand] = useState('left'); // Track active hand
+  const [activeHand, setActiveHand] = useState('right'); // Track active hand
 
   const [pressDurationLeft, setPressDurationLeft] = useState(0);
   const [pressDurationRight, setPressDurationRight] = useState(0);
@@ -48,7 +53,7 @@ const MainScreen = () => {
   const pressTimerRef = useRef(null);
   const longPressActiveRef = useRef(null);
 
-  const [isSpotlightActive, setIsSpotlightActive] = useState(true);
+  const [isSpotlightActive, setIsSpotlightActive] = useState(useSelector((state) => state.user.isSpotlightActive) || false);
   const [highlightState, setHighlightState] = useState([true,false]); // Track which workout is highlighted
   const [scaleValue] = useState(new Animated.Value(1));
   const animatedStyle = {
@@ -272,6 +277,11 @@ const MainScreen = () => {
       Alert.alert('Error Saving Workout', 'Please try again later.');
     }
   };
+  const handleSkip = async () => {
+    setIsSpotlightActive(false);
+    dispatch(setSpotlightActive(false));
+    await saveData('isSpotlightActive', false);
+  };
   const highlightButton = (index) => {
     setHighlightState((prevState) => prevState.map((state, i) => i === index));
   };
@@ -298,9 +308,17 @@ const MainScreen = () => {
   const maxVal = 200 * (maxValue / 100);
 
   return (
-    <View style={{ flex: 1 }}>
-      <View style={[isSpotlightActive && styles.overlay]} />
-      <View style={styles.container}>
+<View style={[styles.container, { paddingTop: insets.top }]}>
+{isSpotlightActive && (
+  <TouchableOpacity 
+  style = {{zIndex:50,}}
+  onPress={handleSkip}>
+    <Text style={styles.skipStyle}>
+      Skip
+    </Text>
+  </TouchableOpacity>
+)}
+<View style= {[isSpotlightActive && styles.overlay]}/>
       
         <View style={styles.speedometerContainer}>
           <View style={{ alignSelf: 'center', flexDirection: 'row', paddingBottom: 50 }}>
@@ -321,7 +339,7 @@ const MainScreen = () => {
             <Animated.View style={ isSpotlightActive && highlightState[0] && animatedStyle }>
             <TouchableOpacity 
             onPress={handleSwitchHand}
-            style={[styles.handButton, highlightState[0] && styles.highlightedButton]}>
+            style={[styles.handButton, isSpotlightActive && highlightState[0] && styles.highlightedButton]}>
               <Text 
               style={[styles.handButtonText, activeHand === 'right' ? {color: '#43A1A4'}:styles.handButtonText]}>Right Hand</Text>
             </TouchableOpacity>
@@ -331,7 +349,9 @@ const MainScreen = () => {
           <TouchableOpacity 
             onPress={()=>
               {
+                dispatch(setSpotlightActive(false));
                 setIsSpotlightActive(false);
+                saveData('isSpotlightActive', false);
                 //setHighlightState(null);
               }
             }
@@ -358,7 +378,7 @@ const MainScreen = () => {
           <Text style={styles.pressButtonText}>Long Press</Text>
         </TouchableOpacity>
         </View> */}
-        </View>
+        
       <View style={styles.bottomContainer}>
         <View style={styles.timerContainer}>
         <View stle = {styles.timer}>
@@ -398,19 +418,27 @@ const MainScreen = () => {
           >
             <Text style={styles.pressButtonText}>Check Stats</Text>
           </TouchableOpacity>
-         
       </View>
-    </View>
+  </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    top:"15%",
-    justifyContent: 'flex-start',
-    alignItems: 'center',
+    flex: 1,
+    //top:"15%",
+    //justifyContent: 'flex-start',
+    //alignItems: 'center',
     zIndex:20,
+  },
+  skipStyle:
+  {
+    fontSize:16,
+    zIndex:20,
+    color:'white',
+    justifyContent:'flex-end',
+    alignSelf:'flex-end',
+    margin:10
   },
   overlay: {
     ...StyleSheet.absoluteFill,
@@ -428,9 +456,11 @@ const styles = StyleSheet.create({
     zIndex:10,
   },
   bottomContainer: {
-    flexGrow:1,
-    justifyContent:'center',
-    alignItems: 'center',
+    width:"100%",
+    //margin:10,
+    //flex:1,
+    //justifyContent:'center',
+    //alignItems: 'center',
     marginVertical: 20,
   },
   loadingContainer: {
@@ -438,8 +468,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   speedometerContainer: {
-    padding: 20,
-    width: "90%",
+    //flex:1,
+    top:"1%",
+    marginLeft:"2.5%",
+    padding: 40,
+    width: "95%",
+    justifyContent:'center',
     paddingBottom: 40,
     alignContent: "center",
     backgroundColor: "white",
@@ -470,7 +504,6 @@ const styles = StyleSheet.create({
   handSwitch: {
     flexDirection: 'row',
     justifyContent:"center",
-    
   },
   handButton: {    
     alignItems: 'center',
@@ -511,16 +544,19 @@ const styles = StyleSheet.create({
     margin:12,
   },
   timerContainer: {
+    //flex:1,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    //gap:30,
-    width: '70%',
+    justifyContent: 'space-evenly',
+    alignContent:'center',
+    //gap:100,
+    //width: '100%',
     //margin:30,
     //marginVertical: 10,
   },
   timer:
   {
-    flexDirection:'column'
+    margin:30,
+    flexDirection:'column',
   },
   timerText: {
     fontSize: 44,
@@ -551,11 +587,14 @@ const styles = StyleSheet.create({
     color: 'gray',
   },
   checkStatsButton: {
+    justifyContent:'center',
+    alignItems:'center',
     backgroundColor: '#FFA500',
     paddingVertical: 15,
     paddingHorizontal: 20,
     borderRadius: 5,
     margin: 10,
+    marginHorizontal:"20%"
   },
 });
 

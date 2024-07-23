@@ -3,17 +3,19 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, Animated } from 'react
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import { API_URL } from '@env';
+import { setSpotlightActive } from '../src/store/userSlice';
 import { useSelector } from 'react-redux';
-
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 const WorkoutScreen = ({ route }) => {
   const userId = useSelector((state) => state.user.userId);
   const token = useSelector((state) => state.user.token);
+  const insets = useSafeAreaInsets();
+  console.log("active:",useSelector((state) => state.user.isSpotlightActive));
   const [workouts, setWorkouts] = useState([]);
   const [selectedOption, setSelectedOption] = useState(null);
   const [selectedLevel, setSelectedLevel] = useState(null);
-  const [isSpotlightActive, setIsSpotlightActive] = useState(true);
+  const [isSpotlightActive, setIsSpotlightActive] = useState(useSelector((state) => state.user.isSpotlightActive) || false);
   const [highlightState, setHighlightState] = useState([true,true]); // Track which workout is highlighted
-
   const navigation = useNavigation();
   const [scaleValue] = useState(new Animated.Value(1));
   const animatedStyle = {
@@ -73,7 +75,11 @@ const WorkoutScreen = ({ route }) => {
     setSelectedLevel(level);
     navigation.navigate('Main', { protocol: selectedOption, level, userId });
   };
-
+  const handleSkip = async () => {
+    setIsSpotlightActive(false);
+    dispatch(setSpotlightActive(false));
+    await saveData('isSpotlightActive', false);
+  };
   const getImageSource = (imagePath) => {
     switch (imagePath) {
       case 'AHAP.png':
@@ -90,19 +96,21 @@ const WorkoutScreen = ({ route }) => {
   };
 
   const renderWorkoutButton = (workout) => {
-    console.log(highlightState[0]);
-    const isHighlighted =    workout.protocolName === 'AHAProtocol';
+    
+    const isHighlighted = isSpotlightActive && workout.protocolName === 'AHAProtocol';
+    console.log(isSpotlightActive,isHighlighted, highlightState[0]);
+    //console.log(isHighlighted);
     return (
-      <Animated.View style={ isSpotlightActive&& isHighlighted && highlightState[0] && animatedStyle }>
+      <Animated.View style={ isSpotlightActive && isHighlighted && highlightState[0] && animatedStyle }>
         <TouchableOpacity
-          style={[styles.optionButton, isHighlighted && highlightState[0] && styles.highlightedButton]}
+          style={[styles.optionButton, styles.highlightedButton && isSpotlightActive,isHighlighted, highlightState[0]]}
           onPress={() => handleOptionPress(workout.protocolName)}
           onLongPress={() => isHighlighted && highlightState[0] && highlightButton(1)}
           onPressOut={() => isHighlighted && highlightState[0] && highlightButton(1)}
         >
           
           <Image source={getImageSource(workout.protocolImg)} style={styles.optionImage} />
-          <Text style={[styles.optionText, isHighlighted && highlightState[0] && styles.highlightedText]}>{workout.protocolName}</Text>
+          <Text style={[styles.optionText, isHighlighted && highlightState[0] && styles.highligtedText]}>{workout.protocolName}</Text>
          
         </TouchableOpacity>
         </Animated.View>
@@ -111,18 +119,32 @@ const WorkoutScreen = ({ route }) => {
   };
 
   return (
-    <View style={styles.container}>
-      {!selectedOption && <Text style={styles.heading}>Select Workout</Text>}
-      <View style={[isSpotlightActive && styles.overlay]} />
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      {isSpotlightActive && (
+  <TouchableOpacity 
+  style = {{zIndex:50,}}
+  onPress={handleSkip}>
+    <Text style={styles.skipStyle}>
+      Skip
+    </Text>
+  </TouchableOpacity>
+)}
+<View style={[isSpotlightActive && styles.overlay]} />
+<View style = {styles.workouContainer}>
+      {!selectedOption && <Text style={[styles.heading, isSpotlightActive && styles.highligtedText]}>Select Workout</Text>}
+      
+      
+      
       <View style={[styles.optionsContainer, selectedOption && styles.hideOptions]}>
         {workouts.map(renderWorkoutButton)}
       </View>
+      </View>
       {selectedOption && (
         <View style={styles.levelsMainContainer}>
-          <Text style={styles.subheading}>Choose difficulty level</Text>
+          <Text style={[styles.subheading, isSpotlightActive && highlightState[1] && styles.highligtedText]}>Choose difficulty level</Text>
           <View style={styles.levelsContainer}>
           <Animated.View style={isSpotlightActive &&  highlightState[1] && animatedStyle }>
-            <TouchableOpacity style={[styles.levelButton,isSpotlightActive &&  highlightState[1] && styles.highlightedButton]} onPress={() => handleLevelPress('Easy')}>
+            <TouchableOpacity style={[styles.levelButton,isSpotlightActive &&  highlightState[1] && styles.highlightedButtonDifficulty]} onPress={() => handleLevelPress('Easy')}>
               <Text style={styles.levelText}>Beginner</Text>
             </TouchableOpacity>
             </Animated.View>
@@ -135,21 +157,41 @@ const WorkoutScreen = ({ route }) => {
           </View>
         </View>
       )}
-    </View>
+      </View>
   );
 };
 
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFill,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, .8)',
     zIndex: 5,
+    flex: 1,
   },
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
+    zIndex:0,
+  },
+  workouContainer:
+  {
+    flex:1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  skipStyle:
+  {
+    fontSize:16,
+    zIndex:20,
+    color:'white',
+    justifyContent:'flex-end',
+    alignSelf:'flex-end',
+    margin:10
   },
   heading: {
     color: 'black',
@@ -159,17 +201,28 @@ const styles = StyleSheet.create({
   },
   highlightedButton: {
     justifyContent:'center',
-    borderColor: 'yellow',
-    borderWidth: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
-    zIndex:100,
+    zIndex:20,
   },
-  highlightedText:
+  highlightedButtonDifficulty:
   {
-    color:'white'
+    justifyContent:'center',
+    borderColor: 'yellow',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    zIndex:20,
+  },
+  highligtedText:
+  {
+    fontSize:24,
+    color:'white',
+    zIndex:20,
   },
   subheading: {
     fontSize: 30,
@@ -200,10 +253,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   levelsMainContainer: {
-    flexDirection: 'column',
+    flex:1,
+    paddingBottom:"60%",
+    //flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
   },
   levelsContainer: {
     flexDirection: 'column',

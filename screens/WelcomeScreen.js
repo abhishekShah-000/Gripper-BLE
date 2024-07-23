@@ -4,12 +4,16 @@ import { useNavigation, useRoute, useIsFocused } from '@react-navigation/native'
 import axios from 'axios';
 import { API_URL } from '@env';
 import { useSelector, useDispatch } from 'react-redux';
-import { setMaxStrength } from '../src/store/userSlice';
+import { setMaxStrength, setSpotlightActive, resetState } from '../src/store/userSlice';
+import { loadData, saveData,resetAsyncStorage } from '../components/asyncStorageUtils';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import SpeedometerComponent from '../components/SpeedometerComponent';
 
+import { color } from 'react-native-reanimated';
+
 const WelcomeScreen = () => {
+  
   const insets = useSafeAreaInsets();
   const token = useSelector((state) => state.user.token);
   const dispatch = useDispatch();
@@ -29,7 +33,8 @@ const WelcomeScreen = () => {
   const [isVMaxSet, setIsVMaxSet] = useState(false);
   const [averageStrength, setAverageStrength] = useState(0);
   const [tutorialEnabled, setTutorialEnabled] = useState(true);
-  const [isSpotlightActive, setIsSpotlightActive] = useState(true);
+  const [isSpotlightActive, setIsSpotlightActive] = useState(loadData('isSpotlightActive'));
+
   const [highlightState, setHighlightState] = useState([true,false]); // [highlightStartWorkout, highlightMaxTest]
   const [scaleValue] = useState(new Animated.Value(1));
   const animateBreathing = () => {
@@ -53,10 +58,9 @@ const WelcomeScreen = () => {
   const longPressActiveRef = useRef(null);
   const userId = useSelector((state) => state.user.userId);
   const maxStrength = useSelector((state) => state.user.maxStrength);
-  console.log("Redux:", token, userId, maxStrength);
   useEffect(() => {
     animateBreathing();
-  }, []);
+  }, [highlightState]);
   const animatedStyle = {
     transform: [{ scale: scaleValue }],
     zIndex:100,
@@ -64,7 +68,23 @@ const WelcomeScreen = () => {
   const highlightButton = (index) => {
     setHighlightState((prevState) => prevState.map((state, i) => i === index));
   };
-  
+  useEffect(() => {
+    
+    const loadInitialData = async () => {
+      await resetAsyncStorage();
+      dispatch(resetState());
+      const spotlightActive = await loadData('isSpotlightActive');
+      if (spotlightActive !== null) {
+        dispatch(setSpotlightActive(spotlightActive));
+        setIsSpotlightActive(spotlightActive);
+      }
+      console.log("from storage:",spotlightActive);
+      // Load other initial data as needed
+    };
+
+    loadInitialData();
+  }, [dispatch]);
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -85,7 +105,7 @@ const WelcomeScreen = () => {
           dispatch(setMaxStrength(data));
 
           const sortedData = [...data].sort((a, b) => new Date(b.time) - new Date(a.time));
-          console.log('Sorted data:', sortedData);
+          //console.log('Sorted data:', sortedData);
         }
       } catch (error) {
         console.error('Error fetching stats:', error);
@@ -126,12 +146,28 @@ const WelcomeScreen = () => {
     setLongPressDisabled(true);
     Alert.alert('Long Press Action', 'You have completed the long press action.');
   };
+  const handleSkip = async () => {
+    setIsSpotlightActive(false);
+    dispatch(setSpotlightActive(false));
+    await saveData('isSpotlightActive', false);
+  };
+
 
   return (
     
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={[styles.container, darkMode && styles.darkContainer]}>
+      {isSpotlightActive && (
+  <TouchableOpacity 
+  style = {{zIndex:50,}}
+  onPress={handleSkip}>
+    <Text style={styles.skipStyle}>
+      Skip
+    </Text>
+  </TouchableOpacity>
+)}
         <View style= {[isSpotlightActive && styles.overlay]}/>
+        
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.openDrawer()}>
             <Ionicons name="menu" size={24} color="black" />
@@ -141,7 +177,14 @@ const WelcomeScreen = () => {
             <Ionicons name="moon" size={24} color="black" />
           </TouchableOpacity>
         </View>
+        
         <View style={styles.speedometer}>
+        {isSpotlightActive && highlightState[0] && (<Text style = {[isSpotlightActive, highlightState[0] && styles.highligtedText]}>
+          Test your max now!
+          </Text>)}
+          {isSpotlightActive && highlightState[1]&& (<Text style = {[isSpotlightActive, highlightState[1] && styles.highligtedText]}>
+          Start yout workout now!
+          </Text>)}
           <SpeedometerComponent value={speed} />
         </View>
         <View style={styles.metricsContainer}>
@@ -155,22 +198,22 @@ const WelcomeScreen = () => {
           </View>
         </View>
         <View style={styles.buttons}>
-        <Animated.View style={highlightState[1] && animatedStyle}>
+        <Animated.View style={isSpotlightActive&& highlightState[1] && animatedStyle}>
         <TouchableOpacity
-  style={[styles.startButton, highlightState[1] && styles.highlightedButton]}
-  onPress={() => {
+  style={[styles.startButton, isSpotlightActive && highlightState[1] && styles.highlightedButton]}
+  onPress= {()=>
+  {
     setIsSpotlightActive(false);
-    setHighlightState(2);
-    navigation.navigate("Workout")}
+    navigation.navigate("Workout");
   }
->
+  }>
   <Text style={styles.startButtonText}>Start Workout</Text>
 </TouchableOpacity>
 
        </Animated.View>
-       <Animated.View style={highlightState[0] && animatedStyle}>
+       <Animated.View style={isSpotlightActive && highlightState[0] && animatedStyle}>
   <TouchableOpacity
-    style={[styles.startButton, highlightState[0] && styles.highlightedButton]}
+    style={[styles.startButton, isSpotlightActive && highlightState[0] && styles.highlightedButton]}
     onPress={() => highlightButton(1)}
     onPressIn={handleLongPressIn}
     onPressOut={handleLongPressRelease}
@@ -198,6 +241,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, .8)',
     zIndex: 5,
     flex: 1,
+  },
+  skipStyle:
+  {
+    fontSize:16,
+    zIndex:50,
+    color:'white',
+    justifyContent:'flex-end',
+    alignSelf:'flex-end',
+    margin:10
   },
   container: {
     flex: 1,
@@ -263,11 +315,17 @@ const styles = StyleSheet.create({
   highlightedButton: {
     backgroundColor: '#00b894',
     borderColor: 'yellow',
-    borderWidth: 2,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
+    zIndex:100,
+  },
+  highligtedText:
+  {
+    fontSize:24,
+    color:'white',
     zIndex:100,
   },
   tutorialButton: {

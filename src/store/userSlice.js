@@ -9,6 +9,7 @@ const initialState = {
 export const userSlice = createSlice({
   name: 'user',
   initialState,
+  isSpotlightActive: true,
   reducers: {
     setUserId: (state, action) => {
       state.userId = action.payload;
@@ -19,10 +20,18 @@ export const userSlice = createSlice({
     setMaxStrength: (state, action) => {
       state.maxStrength = action.payload;
     },
+    setSpotlightActive: (state, action) => {
+      state.isSpotlightActive = action.payload;
+    },
+    resetState: (state) => {
+      state.isSpotlightActive =  initialState;
+    },
+
+
   },
 });
 
-export const { setUserId, setToken,  setMaxStrength } = userSlice.actions;
+export const { setUserId, setToken,  setMaxStrength, setSpotlightActive, resetState  } = userSlice.actions;
 
 // Make sure this line is present and not modified
 export default userSlice.reducer;
